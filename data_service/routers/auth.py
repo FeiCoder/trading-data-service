@@ -33,14 +33,21 @@ class RegisterRequest(BaseModel):
 
 async def get_current_user(
     authorization: Optional[str] = Header(default=None),
+    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
 ) -> dict:
+    # 1. 优先检查静态 API Key (针对智能体/开发者工具)
+    if settings.AUTH_API_KEY and x_api_key == settings.AUTH_API_KEY:
+        return {"username": "agent", "is_admin": True, "auth_type": "api_key"}
+
+    # 2. 检查 Bearer Token (JWT)
     if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="未提供认证令牌")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="未提供认证令牌或 API Key")
+    
     token = authorization[7:]
     token_data = get_auth_service().verify_token(token)
     if token_data is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="令牌无效或已过期")
-    return {"username": token_data.sub}
+    return {"username": token_data.sub, "auth_type": "jwt"}
 
 
 async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:

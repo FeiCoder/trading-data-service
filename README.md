@@ -15,6 +15,7 @@
 | 🌐 多数据提供商 | AKShare（免费，默认）/ Tushare Pro / BaoStock / yfinance / FinnHub |
 | 🗄️ 多级缓存 | Redis → MongoDB → 文件，自动降级，任何后端不可用均可运行 |
 | 📈 技术指标 | MA / EMA / MACD / RSI / 布林带 / KDJ / ATR |
+| 🤖 MCP 支持 | 支持 Model Context Protocol，可作为工具供 Claude/GPT 使用 |
 | 🐳 Docker 部署 | 容器网络内自动服务发现，支持连接外部 MongoDB / Redis |
 
 ## 分层架构
@@ -138,6 +139,33 @@ curl "http://localhost:8001/api/technical/000001?indicators=ma,macd,rsi" \
 ```bash
 curl http://localhost:8001/api/markets -H "Authorization: Bearer $TOKEN"
 curl http://localhost:8001/api/markets/CN/providers -H "Authorization: Bearer $TOKEN"
+```
+
+## Agentic (MCP) 使用
+
+本项目原生支持 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)，允许将数据能力作为工具直接集成到 Claude Desktop 或其他支持 MCP 的智能体中。
+
+### 1. 安装环境
+```bash
+pip install fastmcp
+```
+
+### 2. 配置 Claude Desktop
+打开您的 MCP 配置文件（通常在 `~/Library/Application Support/Claude/claude_desktop_config.json`），添加以下内容：
+
+```json
+{
+  "mcpServers": {
+    "trading-data": {
+      "command": "python",
+      "args": ["-m", "data_service.mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/trading-data-service",
+        "AUTH_API_KEY": "your-secret-key"
+      }
+    }
+  }
+}
 ```
 
 ## 关键环境变量

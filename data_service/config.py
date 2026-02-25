@@ -90,6 +90,9 @@ class DataServiceSettings(BaseSettings):
     JWT_ALGORITHM: str = Field(default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
 
+    # 智能体专用 API Key（如果配置，则优先使用或作为后备，留空则必须使用 JWT）
+    AUTH_API_KEY: str = Field(default="")
+    
     # ── 数据源配置 ─────────────────────────────────────────
     DEFAULT_CHINA_DATA_SOURCE: str = Field(default="akshare")
     TUSHARE_TOKEN: str = Field(default="")

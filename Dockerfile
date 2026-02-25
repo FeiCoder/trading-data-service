@@ -19,9 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # 安装 Python 依赖（先复制依赖声明以利用 Docker 层缓存）
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md requirements.txt ./
 RUN pip install --upgrade pip && \
-    pip install --prefer-binary ".[dev]"
+    pip install --prefer-binary ".[dev]" && \
+    pip install --no-cache-dir mcp fastmcp
 
 # 复制应用代码
 COPY data_service ./data_service

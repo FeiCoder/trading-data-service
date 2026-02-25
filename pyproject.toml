@@ -30,6 +30,7 @@ dependencies = [
     "pandas>=2.0.0",
     # Utilities
     "python-dotenv>=1.0.0",
+    "fastmcp>=0.4.1",
 ]
 
 [project.optional-dependencies]

@@ -99,6 +99,28 @@ services:
       retries: 3
       start_period: 20s
 
+  # ── MCP Server (跨容器/远程调用模式) ──────────────────────
+  mcp-server:
+    image: trading-data-service:latest
+    container_name: trading-data-mcp
+    command: python -m data_service.mcp_server
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: "."
+      MCP_MODE: "sse"
+      MCP_PORT: "8002"
+      DOCKER_CONTAINER: "true"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
 volumes:
   mongodb_data:
     driver: local

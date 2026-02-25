@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "trading-stdio": {
+      "comment": "模式 1: 管道模式。适合本地 Claude 使用，通过 docker exec 零依赖运行",
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "trading-data-service", 
+        "python",
+        "-m",
+        "data_service.mcp_server"
+      ]
+    },
+    "trading-sse": {
+      "comment": "模式 2: 网络模式 (SSE)。适合另一个容器或远程智能体调用",
+      "url": "http://localhost:8002/sse"
+    }
+  }
+}
