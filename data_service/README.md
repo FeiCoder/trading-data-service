@@ -1,6 +1,6 @@
 # TradingAgents-CN 数据管理服务
 
-独立的股票数据管理微服务，从 TradingAgents-CN 项目中抽离，专注于数据获取、缓存、处理和技术分析，提供标准化的 HTTP 接口。
+独立的股票数据管理微服务，参考 [TradingAgents-CN](https://github.com/hsliuping/TradingAgents-CN) 项目，专注于数据获取、缓存、处理和技术分析，提供标准化的 HTTP 接口。
 
 ## 功能特性
 
@@ -125,7 +125,8 @@ curl "http://localhost:8001/api/stocks/000001/history?start_date=2024-01-01&end_
   -H "Authorization: Bearer $TOKEN"
 
 # 搜索股票
-curl "http://localhost:8001/api/stocks/search?keyword=平安" \
+curl -G "http://localhost:8001/api/stocks/search" \
+  --data-urlencode "keyword=平安" \
   -H "Authorization: Bearer $TOKEN"
 ```
 

@@ -2,6 +2,8 @@
 
 股票数据管理微服务 – 独立 HTTP API 服务。
 
+本项目参考 [TradingAgents-CN](https://github.com/hsliuping/TradingAgents-CN) 项目实现。
+
 提供股票数据管理、用户认证、多市场数据提供商、多级缓存和技术指标分析功能，支持通过 Docker 独立部署或加入现有容器网络协同运行。
 
 ## 功能特性
@@ -36,7 +38,13 @@ Acquisition Layer    ← AKShare / Tushare / BaoStock / yfinance
 ```bash
 # 1. 安装依赖
 pip install -e ".[dev]"
-
+```
+```bash
+# 或采用uv方式：
+uv sync
+source .venv/bin/activate
+```
+```bash
 # 2. 配置环境变量
 cp .env.example .env
 # 编辑 .env，至少检查 JWT_SECRET 和数据库地址
@@ -108,7 +116,8 @@ curl "http://localhost:8001/api/stocks/000001/history?start_date=2024-01-01&end_
   -H "Authorization: Bearer $TOKEN"
 
 # 搜索股票
-curl "http://localhost:8001/api/stocks/search?keyword=平安" \
+curl -G "http://localhost:8001/api/stocks/search" \
+  --data-urlencode "keyword=平安" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -148,7 +157,7 @@ curl http://localhost:8001/api/markets/CN/providers -H "Authorization: Bearer $T
 
 ```bash
 pip install -e ".[dev]"
-pytest tests/ -v
+python -m pytest tests/ -v
 ```
 
 ## 项目结构
@@ -171,3 +180,8 @@ pytest tests/ -v
 ├── .env.example
 └── VERSION
 ```
+
+## 相关项目
+
+- [TradingAgents-CN](https://github.com/hsliuping/TradingAgents-CN): 智能量化交易多 Agent 框架
+

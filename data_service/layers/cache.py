@@ -39,7 +39,7 @@ class CacheLayer:
 
         # L1: Redis
         redis = get_redis()
-        if redis:
+        if redis is not None:
             try:
                 raw = await redis.get(key)
                 if raw:
@@ -50,7 +50,7 @@ class CacheLayer:
 
         # L2: MongoDB
         db = get_mongo_db()
-        if db:
+        if db is not None:
             try:
                 doc = await db["data_cache"].find_one({"key": key})
                 if doc:
@@ -94,7 +94,7 @@ class CacheLayer:
 
         # L1: Redis
         redis = get_redis()
-        if redis:
+        if redis is not None:
             try:
                 await redis.setex(key, ttl, serialized)
                 logger.debug(f"缓存写入（Redis）: {key}")
@@ -104,7 +104,7 @@ class CacheLayer:
 
         # L2: MongoDB
         db = get_mongo_db()
-        if db:
+        if db is not None:
             try:
                 from datetime import timedelta
                 expires_at = datetime.now(tz=timezone.utc) + timedelta(seconds=ttl)
@@ -133,13 +133,13 @@ class CacheLayer:
     async def delete(self, namespace: str, *parts: str) -> None:
         key = _make_key(namespace, *parts)
         redis = get_redis()
-        if redis:
+        if redis is not None:
             try:
                 await redis.delete(key)
             except Exception:
                 pass
         db = get_mongo_db()
-        if db:
+        if db is not None:
             try:
                 await db["data_cache"].delete_one({"key": key})
             except Exception:
@@ -155,7 +155,7 @@ class CacheLayer:
         """返回各缓存后端统计信息"""
         result: dict = {}
         redis = get_redis()
-        if redis:
+        if redis is not None:
             try:
                 result["redis"] = {"keys": await redis.dbsize(), "status": "healthy"}
             except Exception as exc:
@@ -164,7 +164,7 @@ class CacheLayer:
             result["redis"] = {"status": "disabled"}
 
         db = get_mongo_db()
-        if db:
+        if db is not None:
             try:
                 count = await db["data_cache"].count_documents({})
                 result["mongodb"] = {"documents": count, "status": "healthy"}

@@ -74,15 +74,15 @@ async def init_redis() -> bool:
 async def close_connections():
     """关闭所有数据库连接"""
     global _mongo_client, _mongo_db, _redis_client, _redis_pool
-    if _mongo_client:
+    if _mongo_client is not None:
         _mongo_client.close()
         _mongo_client = None
         _mongo_db = None
         logger.info("MongoDB 连接已关闭")
-    if _redis_client:
+    if _redis_client is not None:
         await _redis_client.aclose()
         _redis_client = None
-    if _redis_pool:
+    if _redis_pool is not None:
         await _redis_pool.disconnect()
         _redis_pool = None
         logger.info("Redis 连接已关闭")
@@ -104,7 +104,7 @@ async def check_health() -> dict:
         "mongodb": {"status": "disabled"},
         "redis": {"status": "disabled"},
     }
-    if _mongo_client:
+    if _mongo_client is not None:
         try:
             await _mongo_client.admin.command("ping")
             result["mongodb"] = {"status": "healthy", "host": settings.MONGODB_HOST}
@@ -113,7 +113,7 @@ async def check_health() -> dict:
     elif settings.MONGODB_ENABLED:
         result["mongodb"] = {"status": "disconnected"}
 
-    if _redis_client:
+    if _redis_client is not None:
         try:
             await _redis_client.ping()
             result["redis"] = {"status": "healthy", "host": settings.REDIS_HOST}

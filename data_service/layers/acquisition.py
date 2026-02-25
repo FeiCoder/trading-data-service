@@ -23,6 +23,19 @@ class AcquisitionLayer:
     def __init__(self):
         self._china_source = settings.DEFAULT_CHINA_DATA_SOURCE
 
+    def _get_china_market_prefix(self, symbol: str) -> str:
+        """根据 6 位代码判断 A 股市场前缀"""
+        if not symbol or len(symbol) < 6:
+            return ""
+        # 6 开头为沪市，0 或 3 开头为深市，8 或 4 开头为北交所
+        if symbol.startswith("6") or symbol.startswith("9"):
+            return "sh"
+        if symbol.startswith("0") or symbol.startswith("3"):
+            return "sz"
+        if symbol.startswith("4") or symbol.startswith("8"):
+            return "bj"
+        return ""
+
     # ── A 股 ──────────────────────────────────────────────
 
     def get_china_stock_list(self) -> List[Dict[str, Any]]:
@@ -133,11 +146,19 @@ class AcquisitionLayer:
     ) -> List[Dict[str, Any]]:
         if not settings.TUSHARE_TOKEN:
             raise RuntimeError("TUSHARE_TOKEN 未配置")
+        
+        # 转换符号（Tushare 需要 000001.SZ 格式）
+        ts_code = symbol
+        if "." not in ts_code:
+            prefix = self._get_china_market_prefix(symbol)
+            if prefix:
+                ts_code = f"{symbol}.{prefix.upper()}"
+
         import tushare as ts
         ts.set_token(settings.TUSHARE_TOKEN)
         pro = ts.pro_api()
         df = pro.daily(
-            ts_code=symbol,
+            ts_code=ts_code,
             start_date=start_date.replace("-", ""),
             end_date=end_date.replace("-", ""),
         )
@@ -177,9 +198,17 @@ class AcquisitionLayer:
         self, symbol: str, start_date: str, end_date: str
     ) -> List[Dict[str, Any]]:
         import baostock as bs
+        
+        # 转换符号（Baostock 需要 sz.000001 格式）
+        bs_code = symbol
+        if "." not in bs_code:
+            prefix = self._get_china_market_prefix(symbol)
+            if prefix:
+                bs_code = f"{prefix}.{symbol}"
+
         lg = bs.login()
         rs = bs.query_history_k_data_plus(
-            symbol,
+            bs_code,
             "date,open,high,low,close,volume,amount,pctChg",
             start_date=start_date,
             end_date=end_date,
