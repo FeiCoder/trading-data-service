@@ -2,7 +2,7 @@
 
 股票数据管理微服务 – 独立 HTTP API 服务。
 
-本项目参考 [TradingAgents-CN](https://github.com/hsliuping/TradingAgents-CN) 项目实现。
+本项目参考 [TradingAgents-CN](https://github.com/hsliuping/TradingAgents-CN) 及 [TrendRadar](https://github.com/sansan0/TrendRadar) 项目实现。
 
 提供股票数据管理、用户认证、多市场数据提供商、多级缓存和技术指标分析功能，支持通过 Docker 独立部署或加入现有容器网络协同运行。
 
@@ -218,4 +218,5 @@ python -m pytest tests/ -v
 ## 相关项目
 
 - [TradingAgents-CN](https://github.com/hsliuping/TradingAgents-CN): 智能量化交易多 Agent 框架
+- [TrendRadar](https://github.com/sansan0/TrendRadar): 趋势雷达 - 全球财经新闻与趋势监控工具
 

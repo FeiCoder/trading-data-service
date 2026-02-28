@@ -9,6 +9,7 @@ TradingAgents-CN 数据管理服务
 
 import logging
 import time
+import asyncio
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -20,6 +21,7 @@ from data_service import __version__
 from data_service.config import settings
 from data_service.db import init_mongodb, init_redis, close_connections
 from data_service.routers import health, auth, stocks, market, cache, technical, news
+from data_service.services.news_service import get_news_service
 
 # ── 日志配置 ──────────────────────────────────────────────
 logging.basicConfig(
@@ -27,6 +29,26 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+async def task_fetch_and_save_news():
+    """后台任务：定时抓取并持久化新闻"""
+    logger.info("📡 启动新闻定时爬取任务...")
+    svc = get_news_service()
+    while True:
+        try:
+            # 抓取所有源的数据
+            news_items = await svc.get_news(source="all", limit=50)
+            if news_items:
+                await svc.save_news_to_db(news_items)
+            
+            # 每 10 分钟抓取一次 (根据需要调整)
+            await asyncio.sleep(600)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error(f"新闻定时抓取出错: {e}")
+            await asyncio.sleep(60)
 
 
 # ── 生命周期管理 ──────────────────────────────────────────
@@ -53,7 +75,17 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("⚠️ 数据库均不可用，降级为文件缓存模式")
 
+    # 启动后台新闻抓取任务
+    task = asyncio.create_task(task_fetch_and_save_news())
+
     yield
+
+    # 关闭后台任务
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
     logger.info("🔄 数据管理服务正在关闭...")
     await close_connections()

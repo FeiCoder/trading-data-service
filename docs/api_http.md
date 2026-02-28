@@ -96,3 +96,14 @@
     - `limit` (int): 返回条数，范围 1-100。
     - `start_datetime` (string, optional): 开始时间（ISO 8601），用于历史新闻按时间过滤。
     - `end_datetime` (string, optional): 结束时间（ISO 8601），用于历史新闻按时间过滤。
+
+**调用示例**:
+```bash
+# 获取华尔街见闻的前 10 条新闻
+curl -X GET "http://localhost:8001/api/news?source=wallstreetcn&limit=10" \
+     -H "Authorization: Bearer <TOKEN>"
+
+# 获取指定时间范围内的财联社热门新闻
+curl -X GET "http://localhost:8001/api/news?source=all&limit=20&start_datetime=2026-01-01T00:00:00Z&end_datetime=2026-01-02T23:59:59Z" \
+     -H "X-API-Key: <YOUR_KEY>"
+```

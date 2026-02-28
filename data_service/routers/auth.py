@@ -36,6 +36,10 @@ async def get_current_user(
     authorization: Optional[str] = Header(default=None),
     x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
 ) -> dict:
+    # 0. 如果禁用了认证，则直接返回模拟用户
+    if not settings.AUTH_ENABLED:
+        return {"username": "debug_user", "is_admin": True, "auth_enabled": False}
+
     # 1. 优先检查静态 API Key (针对智能体/开发者工具)
     if settings.AUTH_API_KEY and x_api_key == settings.AUTH_API_KEY:
         return {"username": "agent", "is_admin": True, "auth_type": "api_key"}

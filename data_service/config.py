@@ -86,6 +86,7 @@ class DataServiceSettings(BaseSettings):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     # ── JWT / 认证配置 ─────────────────────────────────────
+    AUTH_ENABLED: bool = Field(default=True)
     JWT_SECRET: str = Field(default="change-me-in-production")
     JWT_ALGORITHM: str = Field(default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)

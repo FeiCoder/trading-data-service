@@ -13,6 +13,7 @@ from email.utils import parsedate_to_datetime
 from typing import Any, Dict, List, Optional
 
 from data_service.config import settings
+from data_service.db import get_mongo_db
 from data_service.layers.cache import get_cache_layer
 
 logger = logging.getLogger(__name__)
@@ -189,20 +190,25 @@ class NewsService:
         items = (((data or {}).get("data") or {}).get("items") or [])[:limit]
         rows = []
         for item in items:
+            resource = item.get("resource") or {}
             rows.append(
                 {
                     "source": "wallstreetcn",
-                    "title": str(item.get("title", "")).strip(),
-                    "content": str(item.get("description", "")).strip(),
-                    "published_at": str(item.get("display_time", "")).strip(),
-                    "url": str(item.get("uri", "")).strip(),
+                    "title": str(resource.get("title", "")).strip(),
+                    "content": str(resource.get("content_short", "")).strip(),
+                    "published_at": str(datetime.fromtimestamp(resource.get("display_time", 0), tz=timezone.utc).isoformat()) if resource.get("display_time") else "",
+                    "url": str(resource.get("uri", "")).strip(),
                 }
             )
         return rows
 
     async def _fetch_yahoo_rss_news(self, limit: int) -> List[Dict[str, Any]]:
         def _fetch():
-            with urllib.request.urlopen("https://finance.yahoo.com/news/rssindex", timeout=8) as response:
+            req = urllib.request.Request(
+                "https://finance.yahoo.com/news/rssindex",
+                headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+            )
+            with urllib.request.urlopen(req, timeout=8) as response:
                 return ET.fromstring(response.read())
 
         root = await self._run_with_timeout(_fetch)
@@ -221,6 +227,35 @@ class NewsService:
                 }
             )
         return rows
+
+    async def save_news_to_db(self, news_list: List[Dict[str, Any]]):
+        """将新闻持久化到 MongoDB，避免重复"""
+        db = get_mongo_db()
+        if db is None or not news_list:
+            return
+
+        collection = db["news_history"]
+        # 创建索引以加速去重和时间查询
+        await collection.create_index([("url", 1)], unique=True)
+        await collection.create_index([("published_at", -1)])
+
+        count = 0
+        for item in news_list:
+            if not item.get("url"):
+                continue
+            try:
+                # 使用 upsert 逻辑，以 URL 作为唯一标识
+                await collection.update_one(
+                    {"url": item["url"]},
+                    {"$set": item},
+                    upsert=True
+                )
+                count += 1
+            except Exception as e:
+                logger.error(f"持久化新闻失败: {e}")
+        
+        if count > 0:
+            logger.info(f"已持久化 {count} 条新闻到数据库")
 
 
 _news_service: Optional[NewsService] = None
