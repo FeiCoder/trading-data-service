@@ -16,11 +16,18 @@ router = APIRouter(prefix="/api/news", tags=["财经新闻"])
 async def get_news(
     source: str = Query(default="all", description="新闻源: all / sina / cls_hot / wallstreetcn / yahoo_rss"),
     limit: int = Query(default=20, ge=1, le=100, description="返回条数"),
+    start_datetime: str | None = Query(default=None, description="开始时间（可选，ISO 8601）"),
+    end_datetime: str | None = Query(default=None, description="结束时间（可选，ISO 8601）"),
     current_user: dict = Depends(get_current_user),
 ):
     svc = get_news_service()
     try:
-        news = await svc.get_news(source=source, limit=limit)
+        news = await svc.get_news(
+            source=source,
+            limit=limit,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     except Exception as exc:

@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -35,3 +35,26 @@ async def test_get_news_yahoo_rss_parse():
     assert len(rows) == 1
     assert rows[0]["source"] == "yahoo_rss"
     assert rows[0]["title"] == "Yahoo Title"
+
+
+@pytest.mark.asyncio
+async def test_get_news_datetime_filter_with_cache():
+    svc = NewsService()
+    svc._cache.get = AsyncMock(return_value=None)
+    svc._cache.set = AsyncMock()
+    svc._fetch_yahoo_rss_news = AsyncMock(
+        return_value=[
+            {"source": "yahoo_rss", "title": "in", "published_at": "Sat, 28 Feb 2026 10:00:00 GMT", "url": ""},
+            {"source": "yahoo_rss", "title": "out", "published_at": "Sat, 28 Feb 2026 08:00:00 GMT", "url": ""},
+        ]
+    )
+
+    rows = await svc.get_news(
+        source="yahoo_rss",
+        limit=10,
+        start_datetime="2026-02-28T09:00:00+00:00",
+        end_datetime="2026-02-28T11:00:00+00:00",
+    )
+
+    assert [r["title"] for r in rows] == ["in"]
+    svc._cache.set.assert_awaited()

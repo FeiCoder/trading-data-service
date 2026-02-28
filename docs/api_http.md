@@ -94,3 +94,5 @@
 - **Params**:
     - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn` / `yahoo_rss`。
     - `limit` (int): 返回条数，范围 1-100。
+    - `start_datetime` (string, optional): 开始时间（ISO 8601），用于历史新闻按时间过滤。
+    - `end_datetime` (string, optional): 结束时间（ISO 8601），用于历史新闻按时间过滤。

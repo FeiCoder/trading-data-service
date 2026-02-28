@@ -8,11 +8,17 @@ import json
 import logging
 import urllib.request
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any, Dict, List, Optional
+
+from data_service.config import settings
+from data_service.layers.cache import get_cache_layer
 
 logger = logging.getLogger(__name__)
 
 _SUPPORTED_SOURCES = {"sina", "cls_hot", "wallstreetcn", "yahoo_rss", "all"}
+_NEWS_HISTORY_CACHE_NS = "news_history"
 
 
 def _pick_first(row: Dict[str, Any], keys: List[str]) -> str:
@@ -24,27 +30,101 @@ def _pick_first(row: Dict[str, Any], keys: List[str]) -> str:
 
 
 class NewsService:
-    async def get_news(self, source: str = "all", limit: int = 20) -> List[Dict[str, Any]]:
+    def __init__(self):
+        self._cache = get_cache_layer()
+
+    async def get_news(
+        self,
+        source: str = "all",
+        limit: int = 20,
+        start_datetime: Optional[str] = None,
+        end_datetime: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         source = source.lower()
         if source not in _SUPPORTED_SOURCES:
             raise ValueError(f"不支持的新闻源: {source}")
 
-        if source == "sina":
-            return (await self._fetch_sina_news(limit))[:limit]
-        if source == "cls_hot":
-            return (await self._fetch_cls_hot_news(limit))[:limit]
-        if source == "wallstreetcn":
-            return (await self._fetch_wallstreetcn_news(limit))[:limit]
-        if source == "yahoo_rss":
-            return (await self._fetch_yahoo_rss_news(limit))[:limit]
+        if start_datetime or end_datetime:
+            start_dt = self._parse_datetime(start_datetime) if start_datetime else None
+            end_dt = self._parse_datetime(end_datetime) if end_datetime else None
+            if start_datetime and start_dt is None:
+                raise ValueError("开始时间格式无效，需使用 ISO 8601 或 RFC 822")
+            if end_datetime and end_dt is None:
+                raise ValueError("结束时间格式无效，需使用 ISO 8601 或 RFC 822")
+            if start_dt and end_dt and start_dt > end_dt:
+                raise ValueError("开始时间不能晚于结束时间")
 
-        merged = (
+            cache_key_start = start_dt.isoformat() if start_dt else ""
+            cache_key_end = end_dt.isoformat() if end_dt else ""
+            cached = await self._cache.get(_NEWS_HISTORY_CACHE_NS, source, cache_key_start, cache_key_end, str(limit))
+            if cached is not None:
+                return cached
+
+            filtered = self._filter_news_by_datetime(await self._fetch_news(source, limit), start_dt, end_dt)[:limit]
+            await self._cache.set(filtered, _NEWS_HISTORY_CACHE_NS, source, cache_key_start, cache_key_end, str(limit), ttl=settings.NEWS_CACHE_TTL)
+            return filtered
+
+        return (await self._fetch_news(source, limit))[:limit]
+
+    async def _fetch_news(self, source: str, limit: int) -> List[Dict[str, Any]]:
+        if source == "sina":
+            return await self._fetch_sina_news(limit)
+        if source == "cls_hot":
+            return await self._fetch_cls_hot_news(limit)
+        if source == "wallstreetcn":
+            return await self._fetch_wallstreetcn_news(limit)
+        if source == "yahoo_rss":
+            return await self._fetch_yahoo_rss_news(limit)
+
+        return (
             await self._fetch_sina_news(limit)
             + await self._fetch_cls_hot_news(limit)
             + await self._fetch_wallstreetcn_news(limit)
             + await self._fetch_yahoo_rss_news(limit)
         )
-        return merged[:limit]
+
+    def _parse_datetime(self, value: Optional[str]) -> Optional[datetime]:
+        if value is None:
+            return None
+
+        text = str(value).strip()
+        if not text:
+            return None
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+
+        try:
+            dt = datetime.fromisoformat(text)
+            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+
+        try:
+            dt = parsedate_to_datetime(text)
+            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            return None
+
+    def _filter_news_by_datetime(
+        self,
+        rows: List[Dict[str, Any]],
+        start_dt: Optional[datetime],
+        end_dt: Optional[datetime],
+    ) -> List[Dict[str, Any]]:
+        if start_dt is None and end_dt is None:
+            return rows
+
+        filtered = []
+        for row in rows:
+            published_dt = self._parse_datetime(str(row.get("published_at", "")).strip())
+            if published_dt is None:
+                continue
+            if start_dt and published_dt < start_dt:
+                continue
+            if end_dt and published_dt > end_dt:
+                continue
+            filtered.append(row)
+        return filtered
 
     async def _run_with_timeout(self, func, timeout: float = 8.0):
         try:

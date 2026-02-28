@@ -338,3 +338,20 @@ class TestNewsRoutes:
             r = client.get("/api/news?source=yahoo_rss&limit=1", headers={"Authorization": f"Bearer {token}"})
         assert r.status_code == 200
         assert r.json()["data"]["news"][0]["source"] == "yahoo_rss"
+
+    def test_news_history_with_datetime(self, client):
+        token = self._login(client)
+        mock_service = AsyncMock()
+        mock_service.get_news.return_value = [{"source": "yahoo_rss", "title": "history"}]
+        with patch("data_service.routers.news.get_news_service", return_value=mock_service):
+            r = client.get(
+                "/api/news?source=yahoo_rss&limit=1&start_datetime=2026-02-28T09:00:00%2B00:00&end_datetime=2026-02-28T11:00:00%2B00:00",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        assert r.status_code == 200
+        mock_service.get_news.assert_awaited_once_with(
+            source="yahoo_rss",
+            limit=1,
+            start_datetime="2026-02-28T09:00:00+00:00",
+            end_datetime="2026-02-28T11:00:00+00:00",
+        )

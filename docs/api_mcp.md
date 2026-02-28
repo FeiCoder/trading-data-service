@@ -51,6 +51,8 @@
 - **Arguments**:
   - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn` / `yahoo_rss`。
   - `limit` (integer): 返回条数。
+  - `start_datetime` (string, optional): 开始时间（ISO 8601），用于历史新闻按时间过滤。
+  - `end_datetime` (string, optional): 结束时间（ISO 8601），用于历史新闻按时间过滤。
 - **用途**: 直接获取新浪财经、财联社热门、华尔街见闻、Yahoo Finance RSS 的原始新闻。
 
 ---
