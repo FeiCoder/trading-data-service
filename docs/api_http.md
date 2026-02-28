@@ -92,5 +92,5 @@
 - **URL**: `/api/news`
 - **Method**: `GET`
 - **Params**:
-    - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn`。
+    - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn` / `yahoo_rss`。
     - `limit` (int): 返回条数，范围 1-100。

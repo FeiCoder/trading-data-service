@@ -7,11 +7,12 @@ import asyncio
 import json
 import logging
 import urllib.request
+import xml.etree.ElementTree as ET
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-_SUPPORTED_SOURCES = {"sina", "cls_hot", "wallstreetcn", "all"}
+_SUPPORTED_SOURCES = {"sina", "cls_hot", "wallstreetcn", "yahoo_rss", "all"}
 
 
 def _pick_first(row: Dict[str, Any], keys: List[str]) -> str:
@@ -34,11 +35,14 @@ class NewsService:
             return (await self._fetch_cls_hot_news(limit))[:limit]
         if source == "wallstreetcn":
             return (await self._fetch_wallstreetcn_news(limit))[:limit]
+        if source == "yahoo_rss":
+            return (await self._fetch_yahoo_rss_news(limit))[:limit]
 
         merged = (
             await self._fetch_sina_news(limit)
             + await self._fetch_cls_hot_news(limit)
             + await self._fetch_wallstreetcn_news(limit)
+            + await self._fetch_yahoo_rss_news(limit)
         )
         return merged[:limit]
 
@@ -112,6 +116,28 @@ class NewsService:
                     "content": str(item.get("description", "")).strip(),
                     "published_at": str(item.get("display_time", "")).strip(),
                     "url": str(item.get("uri", "")).strip(),
+                }
+            )
+        return rows
+
+    async def _fetch_yahoo_rss_news(self, limit: int) -> List[Dict[str, Any]]:
+        def _fetch():
+            with urllib.request.urlopen("https://finance.yahoo.com/news/rssindex", timeout=8) as response:
+                return ET.fromstring(response.read())
+
+        root = await self._run_with_timeout(_fetch)
+        if root is None:
+            return []
+
+        rows = []
+        for item in root.findall("./channel/item")[:limit]:
+            rows.append(
+                {
+                    "source": "yahoo_rss",
+                    "title": (item.findtext("title") or "").strip(),
+                    "content": (item.findtext("description") or "").strip(),
+                    "published_at": (item.findtext("pubDate") or "").strip(),
+                    "url": (item.findtext("link") or "").strip(),
                 }
             )
         return rows

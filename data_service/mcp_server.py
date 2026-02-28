@@ -80,8 +80,8 @@ async def analyze_technical(symbol: str, indicators: str = "ma,macd,rsi", days: 
 @mcp.tool()
 async def get_finance_news(source: str = "all", limit: int = 20):
     """
-    获取财经新闻原始数据（新浪财经、财联社热门、华尔街见闻）。
-    :param source: 新闻源，支持 all/sina/cls_hot/wallstreetcn。
+    获取财经新闻原始数据（新浪财经、财联社热门、华尔街见闻、Yahoo Finance RSS）。
+    :param source: 新闻源，支持 all/sina/cls_hot/wallstreetcn/yahoo_rss。
     :param limit: 返回条数。
     """
     svc = get_news_service()

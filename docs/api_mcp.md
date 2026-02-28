@@ -49,9 +49,9 @@
 ### 5. `get_finance_news`
 获取财经新闻原始数据（不做 AI 分析）。
 - **Arguments**:
-  - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn`。
+  - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn` / `yahoo_rss`。
   - `limit` (integer): 返回条数。
-- **用途**: 直接获取新浪财经、财联社热门、华尔街见闻的原始新闻。
+- **用途**: 直接获取新浪财经、财联社热门、华尔街见闻、Yahoo Finance RSS 的原始新闻。
 
 ---
 

@@ -14,3 +14,14 @@ async def test_get_finance_news_tool():
 
     assert len(result) == 1
     assert result[0]["source"] == "cls_hot"
+
+
+@pytest.mark.asyncio
+async def test_get_finance_news_tool_yahoo_rss():
+    mock_service = AsyncMock()
+    mock_service.get_news.return_value = [{"source": "yahoo_rss", "title": "yahoo"}]
+    with patch("data_service.mcp_server.get_news_service", return_value=mock_service):
+        result = await mcp_server.get_finance_news(source="yahoo_rss", limit=1)
+
+    assert len(result) == 1
+    assert result[0]["source"] == "yahoo_rss"

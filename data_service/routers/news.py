@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/news", tags=["财经新闻"])
 
 @router.get("", response_model=ApiResponse)
 async def get_news(
-    source: str = Query(default="all", description="新闻源: all / sina / cls_hot / wallstreetcn"),
+    source: str = Query(default="all", description="新闻源: all / sina / cls_hot / wallstreetcn / yahoo_rss"),
     limit: int = Query(default=20, ge=1, le=100, description="返回条数"),
     current_user: dict = Depends(get_current_user),
 ):

@@ -329,3 +329,12 @@ class TestNewsRoutes:
         with patch("data_service.routers.news.get_news_service", return_value=mock_service):
             r = client.get("/api/news?source=bad", headers={"Authorization": f"Bearer {token}"})
         assert r.status_code == 400
+
+    def test_news_yahoo_rss(self, client):
+        token = self._login(client)
+        mock_service = AsyncMock()
+        mock_service.get_news.return_value = [{"source": "yahoo_rss", "title": "y1"}]
+        with patch("data_service.routers.news.get_news_service", return_value=mock_service):
+            r = client.get("/api/news?source=yahoo_rss&limit=1", headers={"Authorization": f"Bearer {token}"})
+        assert r.status_code == 200
+        assert r.json()["data"]["news"][0]["source"] == "yahoo_rss"
