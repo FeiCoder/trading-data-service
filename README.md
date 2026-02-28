@@ -141,6 +141,12 @@ curl http://localhost:8001/api/markets -H "Authorization: Bearer $TOKEN"
 curl http://localhost:8001/api/markets/CN/providers -H "Authorization: Bearer $TOKEN"
 ```
 
+### news
+
+```bash
+curl "http://localhost:8001/api/news?source=all&limit=50" -H "Authorization: Bearer $TOKEN"
+```
+
 ## Agentic (MCP) 使用
 
 本项目原生支持 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)，允许将数据能力作为工具直接集成到 Claude Desktop 或其他支持 MCP 的智能体中。
