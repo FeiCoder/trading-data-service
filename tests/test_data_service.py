@@ -305,3 +305,27 @@ class TestMarketRoutes:
         r = client.get("/api/markets/CN/providers", headers={"Authorization": f"Bearer {token}"})
         ids = [p["id"] for p in r.json()["data"]["providers"]]
         assert "akshare" in ids
+
+
+class TestNewsRoutes:
+    def _login(self, client) -> str:
+        return client.post("/api/auth/login",
+                           json={"username": "admin", "password": "admin123"}).json()["data"]["access_token"]
+
+    def test_news_list(self, client):
+        token = self._login(client)
+        mock_service = AsyncMock()
+        mock_service.get_news.return_value = [{"source": "sina", "title": "t1"}]
+        with patch("data_service.routers.news.get_news_service", return_value=mock_service):
+            r = client.get("/api/news?source=sina&limit=1", headers={"Authorization": f"Bearer {token}"})
+        assert r.status_code == 200
+        assert r.json()["data"]["count"] == 1
+        assert r.json()["data"]["news"][0]["source"] == "sina"
+
+    def test_news_invalid_source(self, client):
+        token = self._login(client)
+        mock_service = AsyncMock()
+        mock_service.get_news.side_effect = ValueError("不支持的新闻源")
+        with patch("data_service.routers.news.get_news_service", return_value=mock_service):
+            r = client.get("/api/news?source=bad", headers={"Authorization": f"Bearer {token}"})
+        assert r.status_code == 400

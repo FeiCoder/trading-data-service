@@ -10,6 +10,7 @@ from datetime import date, timedelta
 from fastmcp import FastMCP
 from data_service.services.stock_service import get_stock_service
 from data_service.services.technical_service import get_technical_service
+from data_service.services.news_service import get_news_service
 from data_service.config import settings
 
 # 初始化 FastMCP
@@ -75,6 +76,16 @@ async def analyze_technical(symbol: str, indicators: str = "ma,macd,rsi", days: 
         end_date=end_date,
         indicators=indicator_list
     )
+
+@mcp.tool()
+async def get_finance_news(source: str = "all", limit: int = 20):
+    """
+    获取财经新闻原始数据（新浪财经、财联社热门、华尔街见闻）。
+    :param source: 新闻源，支持 all/sina/cls_hot/wallstreetcn。
+    :param limit: 返回条数。
+    """
+    svc = get_news_service()
+    return await svc.get_news(source=source, limit=limit)
 
 if __name__ == "__main__":
     # 该文件既可以作为 stdio 服务器运行 (默认)，也可以作为 SSE 服务器运行

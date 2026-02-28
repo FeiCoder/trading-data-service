@@ -83,3 +83,14 @@
 ### 2. 查看数据源状态
 - **URL**: `/api/markets/{market}/providers`
 - **Method**: `GET`
+
+---
+
+## 📰 财经新闻 (News)
+
+### 1. 获取财经新闻原始数据
+- **URL**: `/api/news`
+- **Method**: `GET`
+- **Params**:
+    - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn`。
+    - `limit` (int): 返回条数，范围 1-100。

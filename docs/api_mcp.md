@@ -46,6 +46,13 @@
   - `days` (integer): 计算窗口所需数据量。
 - **用途**: 核心工具。智能体通过此工具直接获得“超买/超卖”、“趋势强弱”等量化结论。
 
+### 5. `get_finance_news`
+获取财经新闻原始数据（不做 AI 分析）。
+- **Arguments**:
+  - `source` (string): 新闻源，支持 `all` / `sina` / `cls_hot` / `wallstreetcn`。
+  - `limit` (integer): 返回条数。
+- **用途**: 直接获取新浪财经、财联社热门、华尔街见闻的原始新闻。
+
 ---
 
 ## 💡 Agent 开发建议

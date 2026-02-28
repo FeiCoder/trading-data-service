@@ -10,6 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Header, status
 from pydantic import BaseModel
 
+from data_service.config import settings
 from data_service.models.response import ApiResponse
 from data_service.services.auth_service import get_auth_service
 

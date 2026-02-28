@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from data_service import __version__
 from data_service.config import settings
 from data_service.db import init_mongodb, init_redis, close_connections
-from data_service.routers import health, auth, stocks, market, cache, technical
+from data_service.routers import health, auth, stocks, market, cache, technical, news
 
 # ── 日志配置 ──────────────────────────────────────────────
 logging.basicConfig(
@@ -120,6 +120,7 @@ app.include_router(stocks.router)
 app.include_router(market.router)
 app.include_router(cache.router)
 app.include_router(technical.router)
+app.include_router(news.router)
 
 
 # ── 根路由 ───────────────────────────────────────────────
